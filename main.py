@@ -1,22 +1,36 @@
 import os
-import yfinance as yf # লাইভ ডাটার জন্য
+import yfinance as yf
 from flask import Flask
 from threading import Thread
 from telegram.ext import ApplicationBuilder, CommandHandler
 
-# সিগন্যাল তৈরির লজিক
-async def get_signal(update, context):
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is running!"
+
+def run_web():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
+
+# সিগন্যাল ফাংশন
+async def signal(update, context):
     try:
-        # ধরুন আমরা BTC-USD এর ডাটা নিচ্ছি
-        ticker = yf.Ticker("BTC-USD")
+        # EUR/USD এর লাইভ ডাটা
+        ticker = yf.Ticker("EURUSD=X")
         data = ticker.history(period="1d", interval="15m")
-        last_price = data['Close'].iloc[-1]
+        price = data['Close'].iloc[-1]
         
-        # এখানে একটি সিম্পল লজিক (আপনি আপনার মতো অ্যাডভান্স করতে পারবেন)
-        signal_msg = f"🟢 লাইভ সিগন্যাল (BTC):\n💵 বর্তমান দাম: {last_price:.2f}\n🎯 এন্ট্রি: বর্তমান প্রাইসে নিন\n⏳ টাইমফ্রেম: ৫ মিনিট"
-        
-        await update.message.reply_text(signal_msg)
+        await update.message.reply_text(f"📊 লাইভ মার্কেট সিগন্যাল (EUR/USD)\n💵 বর্তমান প্রাইস: {price:.5f}\n🚀 এন্ট্রি: বর্তমান প্রাইসে দেখুন\n💡 সতর্কবার্তা: ট্রেড নেওয়ার আগে নিজে যাচাই করুন।")
     except Exception as e:
         await update.message.reply_text("দুঃখিত, ডাটা আনতে সমস্যা হচ্ছে।")
 
-# বাকি সব আগের মতোই থাকবে...
+if __name__ == '__main__':
+    Thread(target=run_web).start()
+    TOKEN = os.getenv("BOT_TOKEN")
+    application = ApplicationBuilder().token(TOKEN).build()
+    
+    application.add_handler(CommandHandler("signal", signal))
+    
+    application.run_polling()
