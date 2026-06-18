@@ -1,3 +1,11 @@
-python-telegram-bot
-flask
-yfinance
+from tradingview_ta import TA_Handler, Interval, Exchange
+
+# ট্রেডিং ভিউ থেকে সিগন্যাল আনা
+tesla = TA_Handler(
+    symbol="EURUSD",
+    screener="forex",
+    exchange="FX_IDC",
+    interval=Interval.INTERVAL_1_MINUTE
+)
+analysis = tesla.get_analysis()
+print(analysis.summary) # এটা আপনাকে বলবে BUY, SELL নাকি NEUTRAL
